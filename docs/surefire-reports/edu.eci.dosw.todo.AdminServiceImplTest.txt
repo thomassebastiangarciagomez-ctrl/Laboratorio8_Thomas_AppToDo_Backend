@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: edu.eci.dosw.todo.AdminServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.351 s -- in edu.eci.dosw.todo.AdminServiceImplTest

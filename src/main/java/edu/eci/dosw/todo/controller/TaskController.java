@@ -24,7 +24,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/tasks")
 public class TaskController {
-    private TaskService taskService;
+    private final TaskService taskService;
 
     public TaskController(TaskService taskService){
         this.taskService = taskService;

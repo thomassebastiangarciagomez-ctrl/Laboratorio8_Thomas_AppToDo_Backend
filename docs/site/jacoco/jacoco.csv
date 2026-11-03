@@ -12,12 +12,12 @@ GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_
 ,edu.eci.dosw.todo.entity,UserRole,0,15,0,0,0,3,0,1,0,1
 ,edu.eci.dosw.todo.entity,TaskStatus,0,21,0,0,0,4,0,1,0,1
 ,edu.eci.dosw.todo.entity,TaskEntity,0,59,0,0,0,17,0,17,0,17
-,edu.eci.dosw.todo.config,JwtConfig,0,108,1,9,0,20,1,10,0,6
+,edu.eci.dosw.todo.config,JwtConfig,5,95,3,7,1,17,3,7,0,5
 ,edu.eci.dosw.todo.config,WebConfig,0,45,0,0,0,6,0,2,0,2
 ,edu.eci.dosw.todo.config,SecurityConfig,0,94,0,0,0,11,0,9,0,9
 ,edu.eci.dosw.todo.dto,TaskCreateRequest,0,31,0,0,0,9,0,9,0,9
 ,edu.eci.dosw.todo.dto,TaskUpdateRequest,0,38,0,0,0,11,0,11,0,11
-,edu.eci.dosw.todo.dto,AdminSummaryResponse,0,12,0,0,0,1,0,1,0,1
+,edu.eci.dosw.todo.dto,AdminSummaryResponse,2,17,1,1,0,3,1,1,0,1
 ,edu.eci.dosw.todo.dto,TaskResponse,0,86,0,0,0,24,0,16,0,16
 ,edu.eci.dosw.todo.dto,RegisterRequest,9,15,0,0,3,4,3,4,3,4
 ,edu.eci.dosw.todo.dto,UserResponse,0,53,0,0,0,15,0,10,0,10

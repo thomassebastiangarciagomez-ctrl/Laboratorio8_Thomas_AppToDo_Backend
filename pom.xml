@@ -138,6 +138,28 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+			<groupId>com.github.spotbugs</groupId>
+			<artifactId>spotbugs-maven-plugin</artifactId>
+			<version>4.10.5.0</version>
+			<configuration>
+				<effort>Max</effort>
+				<threshold>Medium</threshold>
+				<effort>Max</effort>
+				<threshold>Medium</threshold>
+				<excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+			</configuration>
+			<executions>
+				<execution>
+				<id>spotbugs-verify</id>
+				<phase>verify</phase>
+				<goals>
+					<goal>spotbugs</goal>
+					<goal>check</goal>
+				</goals>
+				</execution>
+			</executions>
+			</plugin>
 		</plugins>
 	</build>
 

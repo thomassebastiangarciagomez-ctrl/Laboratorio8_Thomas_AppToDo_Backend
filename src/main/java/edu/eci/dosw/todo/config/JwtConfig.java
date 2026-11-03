@@ -54,11 +54,14 @@ public class JwtConfig {
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
         
-        OAuth2TokenValidator<Jwt> subjectPresent = jwt ->
-                (jwt.getSubject() != null && !jwt.getSubject().isBlank())
-                        ? OAuth2TokenValidatorResult.success()
-                        : OAuth2TokenValidatorResult.failure(
-                                new OAuth2Error("invalid_token", "Falta el sujeto del token", null));
+        OAuth2TokenValidator<Jwt> subjectPresent = jwt -> {
+                String subject = jwt.getSubject();
+                    if (subject != null && !subject.isBlank()) {
+                        return OAuth2TokenValidatorResult.success();
+                    }
+                    return OAuth2TokenValidatorResult.failure(
+                            new OAuth2Error("invalid_token", "Falta el sujeto del token", null));
+                };
         
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 new JwtTimestampValidator(Duration.ZERO),

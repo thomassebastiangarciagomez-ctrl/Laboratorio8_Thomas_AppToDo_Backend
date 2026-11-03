@@ -2,5 +2,11 @@
 
 import java.util.Map;
 
-<span class="fc" id="L5">public record AdminSummaryResponse(long totalUsers, long totalTasks, Map&lt;String, Long&gt; tasksByStatus) {}</span>
+public record AdminSummaryResponse(long totalUsers, long totalTasks, Map&lt;String, Long&gt; tasksByStatus) {
+
+<span class="fc" id="L7">    public AdminSummaryResponse {</span>
+<span class="pc bpc" id="L8" title="1 of 2 branches missed.">        tasksByStatus = (tasksByStatus == null) ? Map.of() : Map.copyOf(tasksByStatus);</span>
+<span class="fc" id="L9">    }</span>
+
+}
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

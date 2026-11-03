@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: edu.eci.dosw.todo.SecurityEndpointsTest
+-------------------------------------------------------------------------------
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.123 s -- in edu.eci.dosw.todo.SecurityEndpointsTest
