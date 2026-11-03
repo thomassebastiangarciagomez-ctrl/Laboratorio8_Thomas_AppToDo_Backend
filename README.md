@@ -36,4 +36,10 @@ Y de igual forma, debido a esta integracion, se debe agregar en la seccion de co
 <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
 ```
 
+Al realizar todo este procedimiento, para ejecutar las pruebas y la calidad de las mismas se debe ejecutar en consola dentro de la carpeta de backend el siguiente comando. Esto generara los archivos necesarios para esta parte del laboratorio.
+
+```bash
+mvn -B -ntp clean verify
+```
+
 Con esto, el archivo se construira de manera adecuada, lo que nos indica que el codigo es el adecuado. Con base en esto, dentro del directorio de docs/ se encuentran el analisis Jacoco y la carpeta de SpotBugs surefire-reports/ que es solicitada en esta parte del laboratorio.
