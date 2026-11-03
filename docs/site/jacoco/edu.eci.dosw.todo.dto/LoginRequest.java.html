@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.todo.dto</a> &gt; <span class="el_source">LoginRequest.java</span></div><h1>LoginRequest.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.todo.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+<span class="fc" id="L7">public class LoginRequest {</span>
+    
+    @NotBlank(message = &quot;Debe indicar un email&quot;)
+    @Email(message = &quot;Ingrese un correo valido&quot;)
+    @Size(max = 100, message = &quot;El tamaño maximo del correo es de 100 caracteres&quot;)
+    private String email;
+
+    @NotBlank(message = &quot;Indique una contraseña&quot;)
+    @Size(max = 72, message = &quot;El tamaño maximo de la contraseña es de 72 caracteres&quot;)
+    private String password;
+
+
+    
+<span class="nc" id="L20">    public String getEmail(){ return this.email; }</span>
+<span class="fc" id="L21">    public void setEmail(String email){ this.email = email; }</span>
+
+<span class="nc" id="L23">    public String getPassword(){ return this.password; }</span>
+<span class="fc" id="L24">    public void setPassword(String password){ this.password = password; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

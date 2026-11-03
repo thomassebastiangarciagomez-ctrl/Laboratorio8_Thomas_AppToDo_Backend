@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.todo.config</a> &gt; <span class="el_source">JwtConfig.java</span></div><h1>JwtConfig.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.todo.config;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.time.Duration;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+
+@Configuration 
+<span class="fc" id="L30">public class JwtConfig {</span>
+
+<span class="fc" id="L32">    private static final Logger log = LoggerFactory.getLogger(JwtConfig.class);</span>
+
+    @Bean
+    public SecretKey jwtSecretKey(@Value(&quot;${app.security.jwt.secret}&quot;) String secret) {
+        byte[] bytes;
+<span class="fc bfc" id="L37" title="All 4 branches covered.">        if (secret == null || secret.isBlank()) {</span>
+<span class="fc" id="L38">            log.warn(&quot;JWT_SECRET no está configurada: se usa una clave aleatoria generada al arrancar. &quot;</span>
+                    + &quot;Los tokens dejarán de ser válidos al reiniciar. Úselo solo en desarrollo.&quot;);
+<span class="fc" id="L40">            bytes = new byte[32];</span>
+<span class="fc" id="L41">            new SecureRandom().nextBytes(bytes);</span>
+        } else {
+<span class="fc" id="L43">            bytes = secret.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            if (bytes.length &lt; 32) {</span>
+<span class="fc" id="L45">                throw new IllegalStateException(&quot;JWT_SECRET debe tener al menos 32 bytes&quot;);</span>
+            }
+        }
+<span class="fc" id="L48">        return new SecretKeySpec(bytes, &quot;HmacSHA256&quot;);</span>
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder(SecretKey key) {
+<span class="fc" id="L53">        return new NimbusJwtEncoder(new ImmutableSecret&lt;&gt;(key));</span>
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(SecretKey key, @Value(&quot;${app.security.jwt.issuer}&quot;) String issuer) {
+<span class="fc" id="L58">        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key)</span>
+<span class="fc" id="L59">                .macAlgorithm(MacAlgorithm.HS256)</span>
+<span class="fc" id="L60">                .build();</span>
+        
+<span class="fc" id="L62">        OAuth2TokenValidator&lt;Jwt&gt; subjectPresent = jwt -&gt;</span>
+<span class="pc bpc" id="L63" title="1 of 4 branches missed.">                (jwt.getSubject() != null &amp;&amp; !jwt.getSubject().isBlank())</span>
+<span class="fc" id="L64">                        ? OAuth2TokenValidatorResult.success()</span>
+<span class="fc" id="L65">                        : OAuth2TokenValidatorResult.failure(</span>
+                                new OAuth2Error(&quot;invalid_token&quot;, &quot;Falta el sujeto del token&quot;, null));
+        
+<span class="fc" id="L68">        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator&lt;&gt;(</span>
+                new JwtTimestampValidator(Duration.ZERO),
+                new JwtIssuerValidator(issuer),
+                subjectPresent));
+<span class="fc" id="L72">        return decoder;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

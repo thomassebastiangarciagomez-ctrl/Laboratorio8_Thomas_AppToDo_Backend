@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.todo.security</a> &gt; <span class="el_source">JwtServiceImpl.java</span></div><h1>JwtServiceImpl.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.todo.security;
+
+import java.time.Instant;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.stereotype.Service;
+
+import edu.eci.dosw.todo.dto.TokenResponse;
+import edu.eci.dosw.todo.entity.UserEntity;
+
+@Service
+public class JwtServiceImpl implements JwtService{
+    
+    private final JwtEncoder encoder;
+    private final String issuer;
+    private final long expirationSeconds;
+
+<span class="fc" id="L23">    public JwtServiceImpl(JwtEncoder encoder, @Value(&quot;${app.security.jwt.issuer}&quot;) String issuer, @Value(&quot;${app.security.jwt.expiration-seconds}&quot;) long expirationSeconds) {</span>
+<span class="fc" id="L24">        this.encoder = encoder;</span>
+<span class="fc" id="L25">        this.issuer = issuer;</span>
+<span class="fc" id="L26">        this.expirationSeconds = expirationSeconds;</span>
+<span class="fc" id="L27">    }</span>
+
+    /**
+     * Este metodo se encarga de generar el token de verificacion a cada usuario al momento en el que este ingresa
+     * en la aplicacion web
+     */
+    @Override 
+    public TokenResponse generateToken(UserEntity entity){
+<span class="fc" id="L35">        Instant now = Instant.now();</span>
+<span class="fc" id="L36">        JwtClaimsSet claims = JwtClaimsSet.builder()</span>
+<span class="fc" id="L37">                .issuer(issuer)</span>
+<span class="fc" id="L38">                .subject(String.valueOf(entity.getId()))</span>
+<span class="fc" id="L39">                .issuedAt(now)</span>
+<span class="fc" id="L40">                .expiresAt(now.plusSeconds(expirationSeconds))</span>
+<span class="fc" id="L41">                .claim(&quot;role&quot;, entity.getRole().name())</span>
+<span class="fc" id="L42">                .build();</span>
+<span class="fc" id="L43">        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();</span>
+<span class="fc" id="L44">        String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();</span>
+<span class="fc" id="L45">        return new TokenResponse(&quot;Bearer&quot;, token, expirationSeconds);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

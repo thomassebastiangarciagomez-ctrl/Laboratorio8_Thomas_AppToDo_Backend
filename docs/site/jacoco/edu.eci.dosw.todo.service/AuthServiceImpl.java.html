@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.todo.service</a> &gt; <span class="el_source">AuthServiceImpl.java</span></div><h1>AuthServiceImpl.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.todo.service;
+
+import java.time.LocalDateTime;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.eci.dosw.todo.dto.LoginRequest;
+import edu.eci.dosw.todo.dto.RegisterRequest;
+import edu.eci.dosw.todo.dto.TokenResponse;
+import edu.eci.dosw.todo.dto.UserResponse;
+import edu.eci.dosw.todo.entity.UserEntity;
+import edu.eci.dosw.todo.entity.UserRole;
+import edu.eci.dosw.todo.exception.EmailAlreadyExistsException;
+import edu.eci.dosw.todo.exception.InvalidCredentialsException;
+import edu.eci.dosw.todo.repository.UserRepository;
+import edu.eci.dosw.todo.security.JwtService;
+
+@Service 
+public class AuthServiceImpl implements AuthService{
+    
+    private UserRepository userRepository;
+    private PasswordEncoder passwordEncoder;
+    private JwtService jwtService;
+
+
+<span class="fc" id="L28">    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService){</span>
+<span class="fc" id="L29">        this.userRepository = userRepository;</span>
+<span class="fc" id="L30">        this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L31">        this.jwtService = jwtService;</span>
+<span class="fc" id="L32">    }</span>
+
+
+    /**
+     * Este metodo se encarga de la logica dentras de la implementacion del registro de un nuevo usuario
+     * en la aplicacion web
+     */
+    @Override
+    @Transactional
+    public UserResponse register(RegisterRequest request){
+<span class="fc" id="L42">        String email = request.getEmail().trim().toLowerCase();</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if(userRepository.existsByEmail(email)){</span>
+<span class="fc" id="L45">            throw new EmailAlreadyExistsException();</span>
+        }
+
+<span class="fc" id="L48">        UserEntity entity = new UserEntity();</span>
+<span class="fc" id="L49">        entity.setName(request.getName());</span>
+<span class="fc" id="L50">        entity.setEmail(email);</span>
+<span class="fc" id="L51">        entity.setPasswordHash(passwordEncoder.encode(request.getPassword()));</span>
+<span class="fc" id="L52">        entity.setRole(UserRole.USER);</span>
+<span class="fc" id="L53">        entity.setCreatedAt(LocalDateTime.now());</span>
+
+<span class="fc" id="L55">        UserEntity saved = userRepository.save(entity);</span>
+<span class="fc" id="L56">        return UserResponse.fromEntity(saved);</span>
+    }
+
+    /**
+     * Este metodo se encarga de la logica detras del registro de un usuario que ya cuenta con una cuenta
+     * dentro de la aplicacion web
+     */
+    @Override
+    @Transactional
+    public TokenResponse login(LoginRequest request){
+<span class="fc" id="L66">        UserEntity user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())</span>
+<span class="fc" id="L67">                        .filter(entity -&gt; passwordEncoder.matches(request.getPassword(), entity.getPasswordHash()))</span>
+<span class="fc" id="L68">                        .orElseThrow(() -&gt; new InvalidCredentialsException());</span>
+<span class="fc" id="L69">        return jwtService.generateToken(user);</span>
+    }
+
+    /**
+     * Este metodo se encarga de realizar la logica detras de la consulta de perfil por parte de los usuarios
+     * que hayan ingresado a su cuenta.
+     */
+    @Override
+    @Transactional
+    public UserResponse getProfile(Long id){
+<span class="fc" id="L79">        return userRepository.findById(id)</span>
+<span class="fc" id="L80">                .map(entity -&gt; UserResponse.fromEntity(entity))</span>
+<span class="fc" id="L81">                .orElseThrow(() -&gt; new InvalidCredentialsException());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

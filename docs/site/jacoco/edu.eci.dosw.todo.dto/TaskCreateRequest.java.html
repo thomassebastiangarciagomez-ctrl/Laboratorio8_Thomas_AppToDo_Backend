@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskCreateRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">edu.eci.dosw.todo.dto</a> &gt; <span class="el_source">TaskCreateRequest.java</span></div><h1>TaskCreateRequest.java</h1><pre class="source lang-java linenums">package edu.eci.dosw.todo.dto;
+import edu.eci.dosw.todo.entity.TaskPriority;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+
+
+<span class="fc" id="L9">public class TaskCreateRequest {</span>
+    /**
+     * Se añaden los atributos correspondientes junto con las validaciones las cuales nos permiten saber si se
+     * entregaron los valores de la forma esperada, estas validaciones son NotBlank, NotNull y Size.
+     */
+    @NotBlank(message = &quot;El titulo es obligatorio&quot;)
+    @Size(max = 120, message = &quot;El titulo no puede superar los 120 caracteres&quot;)
+    private String title;
+
+    @Size(max = 500, message = &quot;La descripcion no puede superar los 500 caracteres&quot;)
+    private String description;
+
+    @NotNull(message = &quot;La prioridad es obligatoria&quot;)
+    private TaskPriority priority;
+
+    private LocalDate dueDate;
+
+    /**
+     * Seccion de geters y seters en el codigo para poder modificar la informacion
+     */
+
+<span class="fc" id="L30">    public String getTitle(){ return title; }</span>
+<span class="fc" id="L31">    public void setTitle(String title){ this.title = title; }</span>
+
+<span class="fc" id="L33">    public String getDescription(){ return description; }</span>
+<span class="fc" id="L34">    public void setDescription(String description){ this.description = description; }</span>
+
+<span class="fc" id="L36">    public TaskPriority getPriority(){ return priority; }</span>
+<span class="fc" id="L37">    public void setPriority(TaskPriority priority){ this.priority = priority; }</span>
+
+<span class="fc" id="L39">    public LocalDate getDueDate(){ return dueDate; }</span>
+<span class="fc" id="L40">    public void setDueDate(LocalDate dueDate){ this.dueDate = dueDate; }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
