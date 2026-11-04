@@ -24,9 +24,6 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U todo_user -d todo_db"
           --health-interval 5s --health-timeout 5s --health-retries 10
-    defaults:
-      run:
-        working-directory: backend   # Si tu código Java está directo en la raíz, elimina este working-directory
     env:
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/todo_db
       SPRING_DATASOURCE_USERNAME: todo_user
@@ -38,9 +35,9 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
           cache: maven
-          cache-dependency-path: backend/pom.xml
+          cache-dependency-path: pom.xml
       - name: Compilar + pruebas + verificaciones Maven
         run: mvn -B -ntp clean verify
       - name: Guardar reporte de cobertura
@@ -48,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-jacoco
-          path: backend/target/site/jacoco/
+          path: target/site/jacoco/
           if-no-files-found: warn
 
   publish-backend-image:
@@ -77,7 +74,7 @@ jobs:
       - name: Publicar imagen Spring Boot
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
-          file: ./backend/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.base }}-api:${{ steps.meta.outputs.tag }}
