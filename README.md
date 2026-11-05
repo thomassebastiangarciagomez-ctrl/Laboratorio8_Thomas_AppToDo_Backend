@@ -127,7 +127,7 @@ on:
 
 permissions:
   contents: read
-  packages: read
+  packages: write
 
 concurrency:
   group: deploy-azure-todo
@@ -147,6 +147,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - name: Preparar configuración y desplegar
         shell: bash
         env:
@@ -159,10 +160,16 @@ jobs:
           : "${DB_PASSWORD:?Configurar AZURE_DB_PASSWORD}"
           : "${JWT_SECRET:?Configurar AZURE_JWT_SECRET}"
           : "${TODO_DOMAIN:?Configurar variable AZURE_DOMAIN}"
-          export IMAGE_NAMESPACE="ghcr.io/${GITHUB_REPOSITORY,,}"
-          export IMAGE_TAG="sha-${GITHUB_SHA}"
+
+          # Variables que espera el docker-compose.prod.yml
+          export API_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_backend-api"
+          export WEB_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_frontend-web"
+          export BACKEND_TAG="sha-${GITHUB_SHA}"
+          export WEB_TAG="sha-6c1035e59aff39b7edfb5141eeb0f10998f3d625"
 
           DEPLOY_DIR="$HOME/todo-azure"
+          COMPOSE="docker compose --env-file $DEPLOY_DIR/.env -f $DEPLOY_DIR/docker-compose.prod.yml"
+
           mkdir -p "$DEPLOY_DIR/db"
           cp infra/docker-compose.prod.yml "$DEPLOY_DIR/docker-compose.prod.yml"
           cp infra/Caddyfile "$DEPLOY_DIR/Caddyfile"
@@ -170,20 +177,24 @@ jobs:
 
           umask 077
           {
-            printf 'IMAGE_NAMESPACE=%s\n' "$IMAGE_NAMESPACE"
-            printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG"
+            printf 'API_IMAGE=%s\n' "$API_IMAGE"
+            printf 'WEB_IMAGE=%s\n' "$WEB_IMAGE"
+            printf 'BACKEND_TAG=%s\n' "$BACKEND_TAG"
+            printf 'WEB_TAG=%s\n' "$WEB_TAG"
             printf 'TODO_DOMAIN=%s\n' "$TODO_DOMAIN"
             printf 'DB_PASSWORD=%s\n' "$DB_PASSWORD"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
           } > "$DEPLOY_DIR/.env"
 
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker compose --env-file "$DEPLOY_DIR/.env" -f "$DEPLOY_DIR/docker-compose.prod.yml" config --quiet
-          docker compose --env-file "$DEPLOY_DIR/.env" -f "$DEPLOY_DIR/docker-compose.prod.yml" pull
-          docker compose --env-file "$DEPLOY_DIR/.env" -f "$DEPLOY_DIR/docker-compose.prod.yml" up -d --remove-orphans
+          $COMPOSE config --quiet
+          $COMPOSE pull
+          $COMPOSE up -d --remove-orphans
           docker logout ghcr.io
 
           echo "Verificando HTTPS y estado de la aplicación..."
+
+          # 1) /health por HTTPS con certificado válido (sin -k ni --resolve)
           ok=0
           for attempt in $(seq 1 36); do
             if curl --fail --silent --show-error "https://${TODO_DOMAIN}/health" >/dev/null; then
@@ -192,16 +203,48 @@ jobs:
             fi
             sleep 5
           done
-          test "$ok" -eq 1 || { echo 'Error: /health no respondió correctamente'; exit 1; }
-          code=$(curl --silent --output /dev/null --write-out '%{http_code}' "https://${TODO_DOMAIN}/api/v1/tasks")
-          if [ "$code" != "401" ]; then
-            echo "API sin token devolvió HTTP $code (se esperaba 401). Revisar Spring Security."
+          if [ "$ok" -ne 1 ]; then
+            echo 'Error: /health no respondió correctamente'
+            $COMPOSE ps
+            $COMPOSE logs --tail=40 proxy
             exit 1
           fi
+          echo "/health OK"
+
+          # 2) La API protegida debe rechazar la petición sin JWT (401).
+          #    Se reintenta porque el backend puede tardar en arrancar (502/503 al inicio).
+          code=000
+          for attempt in $(seq 1 36); do
+            code=$(curl --silent --output /dev/null --write-out '%{http_code}' "https://${TODO_DOMAIN}/api/v1/tasks" || true)
+            if [ "$code" = "401" ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ "$code" != "401" ]; then
+            echo "API sin token devolvió HTTP $code (se esperaba 401). Revisar Spring Security o el backend."
+            $COMPOSE ps
+            $COMPOSE logs --tail=60 backend
+            exit 1
+          fi
+
           echo "Azure: despliegue, HTTPS y protección básica verificados"
 ```
 
 Algo mas a tener en cuenta, es que previamente se tuvieron que configurar las variables secretas correspondientes dentro del repositorio en github, en este caso, el el repositorio de backend.
+
+Aqui se presentan las imagenes asociadas al despliegue en Azure, donde se logra evidenciar que efectivamente todo funciona de manera correcta.
+
+![imagen1Azure](docs/ci-cd-evidencias/AppToDoAzure1.png)
+
+
+![imagen1Azure](docs/ci-cd-evidencias/AppToDoAzure2.png)
+
+
+![imagen1Azure](docs/ci-cd-evidencias/AppToDoAzure3.png)
+
+
+![imagen1Azure](docs/ci-cd-evidencias/AppToDoAzure4.png)
 
 En la siguiente imagen, se comprueba que la maquina virtual creada, esta configurada de manera adecuada, lo que indica que esta funcionando para realizar de manera adecuada CD.
 
@@ -210,4 +253,122 @@ En la siguiente imagen, se comprueba que la maquina virtual creada, esta configu
 Como se puede evidenciar en la imagen, se logra ver que la configuracion en docker y que la maquina este corriendo en segundo plano la imagen es la esperada.
 
 ## Parte 15 Etapa D1. Preparar el entorno AWS Academy Learner Lab:
+
+Para esta parte, tenemos que realizar varias cosas, al igual que con Azure, en AWS vamos a crear una maquina virtual en EC2, debemos crear el runner correspondiente y cuando ya este configurado esto vamos a crear el ambiente, cabe recalcar, que para este se utilizo como dominio 52-45-205-228.sslip.io, esto gracias a Caddy, el cual no permite el acceso directamente usando la IP, por ende, se utiliza este dominio de resolucion DNS rapida como dominio. Esto tambien se implemento en Azure.
+
+Con la instancia creada y con las configuraciones de IP estatica (en AWS las maquinas en EC2 tienen IP dinamica inicialmente), junto con las internas logramos ver lo siguiente.
+
+![ImagenAWS](docs/ci-cd-evidencias/VMAWS1.png)
+
+Al realizar esto, ahora vamos a incluir el .yml correspondiente a AWS, de tal forma que ahora, tenemos que es el mismo que se utiliza dentro de Azure, pero con las variables cambiadas.
+
+```yml
+name: CD - AWS Academy EC2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-aws-todo
+  cancel-in-progress: false
+
+jobs:
+  quality-gate:
+    name: Revalidar calidad antes del despliegue
+    uses: ./.github/workflows/ci-quality.yml
+
+  deploy-aws:
+    name: Desplegar contenedores en EC2
+    if: github.ref == 'refs/heads/main'
+    needs: quality-gate
+    runs-on: [self-hosted, linux, x64, aws-todo]
+    environment: aws-lab
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar configuración y desplegar
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DB_PASSWORD: ${{ secrets.AWS_DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.AWS_JWT_SECRET }}
+          TODO_DOMAIN: ${{ vars.AWS_DOMAIN }}
+        run: |
+          set -euo pipefail
+          : "${DB_PASSWORD:?Configurar AWS_DB_PASSWORD}"
+          : "${JWT_SECRET:?Configurar AWS_JWT_SECRET}"
+          : "${TODO_DOMAIN:?Configurar variable AWS_DOMAIN}"
+
+          export API_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_backend-api"
+          export WEB_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_frontend-web"
+          export BACKEND_TAG="sha-${GITHUB_SHA}"
+          export WEB_TAG="sha-6c1035e59aff39b7edfb5141eeb0f10998f3d625"
+
+          DEPLOY_DIR="$HOME/todo-aws"
+          COMPOSE="docker compose --env-file $DEPLOY_DIR/.env -f $DEPLOY_DIR/docker-compose.prod.yml"
+
+          mkdir -p "$DEPLOY_DIR/db"
+          cp infra/docker-compose.prod.yml "$DEPLOY_DIR/docker-compose.prod.yml"
+          cp infra/Caddyfile "$DEPLOY_DIR/Caddyfile"
+          cp -a infra/db/. "$DEPLOY_DIR/db/"
+
+          umask 077
+          {
+            printf 'API_IMAGE=%s\n' "$API_IMAGE"
+            printf 'WEB_IMAGE=%s\n' "$WEB_IMAGE"
+            printf 'BACKEND_TAG=%s\n' "$BACKEND_TAG"
+            printf 'WEB_TAG=%s\n' "$WEB_TAG"
+            printf 'TODO_DOMAIN=%s\n' "$TODO_DOMAIN"
+            printf 'DB_PASSWORD=%s\n' "$DB_PASSWORD"
+            printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
+          } > "$DEPLOY_DIR/.env"
+
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          $COMPOSE config --quiet
+          $COMPOSE pull
+          $COMPOSE up -d --remove-orphans
+          docker logout ghcr.io
+
+          echo "Verificando HTTPS y estado de la aplicación..."
+
+          ok=0
+          for attempt in $(seq 1 36); do
+            if curl --fail --silent --show-error "https://${TODO_DOMAIN}/health" >/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo 'Error: /health no respondió correctamente'
+            $COMPOSE ps
+            $COMPOSE logs --tail=40 proxy
+            exit 1
+          fi
+          echo "/health OK"
+
+          code=000
+          for attempt in $(seq 1 36); do
+            code=$(curl --silent --output /dev/null --write-out '%{http_code}' "https://${TODO_DOMAIN}/api/v1/tasks" || true)
+            if [ "$code" = "401" ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ "$code" != "401" ]; then
+            echo "API sin token devolvió HTTP $code (se esperaba 401). Revisar Spring Security o el backend."
+            $COMPOSE ps
+            $COMPOSE logs --tail=60 backend
+            exit 1
+          fi
+
+          echo "AWS Academy: despliegue, HTTPS y protección básica verificados"
+```
+
+Ahora, al realizar estos cambios e integraciones, se va a mostrar el funcionamiento de la aplicacion en AWS, de tal forma que el despliegue es el esperado.
 
