@@ -37,12 +37,15 @@ jobs:
           : "${DB_PASSWORD:?Configurar AZURE_DB_PASSWORD}"
           : "${JWT_SECRET:?Configurar AZURE_JWT_SECRET}"
           : "${TODO_DOMAIN:?Configurar variable AZURE_DOMAIN}"
-          export IMAGE_NAMESPACE="ghcr.io/${GITHUB_REPOSITORY,,}"
-          export IMAGE_TAG="sha-${GITHUB_SHA}"
           
-          # Definir las rutas de las imágenes que exige docker-compose
-          export API_IMAGE="${IMAGE_NAMESPACE}/backend:${IMAGE_TAG}"
-          export WEB_IMAGE="${IMAGE_NAMESPACE}/frontend:${IMAGE_TAG}"
+          export IMAGE_NAMESPACE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          export TAG_VALUE="sha-${GITHUB_SHA}"
+          
+          # Definir las variables exactas que espera el docker-compose y tu .env
+          export API_IMAGE="${IMAGE_NAMESPACE}/back"
+          export WEB_IMAGE="${IMAGE_NAMESPACE}/front"
+          export BACKEND_TAG="${TAG_VALUE}"
+          export WEB_TAG="${TAG_VALUE}"
 
           DEPLOY_DIR="$HOME/todo-azure"
           mkdir -p "$DEPLOY_DIR/db"
@@ -52,10 +55,10 @@ jobs:
 
           umask 077
           {
-            printf 'IMAGE_NAMESPACE=%s\n' "$IMAGE_NAMESPACE"
-            printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG"
             printf 'API_IMAGE=%s\n' "$API_IMAGE"
             printf 'WEB_IMAGE=%s\n' "$WEB_IMAGE"
+            printf 'BACKEND_TAG=%s\n' "$BACKEND_TAG"
+            printf 'WEB_TAG=%s\n' "$WEB_TAG"
             printf 'TODO_DOMAIN=%s\n' "$TODO_DOMAIN"
             printf 'DB_PASSWORD=%s\n' "$DB_PASSWORD"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
