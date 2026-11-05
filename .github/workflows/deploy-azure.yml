@@ -20,7 +20,7 @@ jobs:
     name: Desplegar contenedores en Azure
     if: github.ref == 'refs/heads/main'
     needs: quality-gate
-    runs-on: [self-hosted, linux, x64, azure-todo]
+    runs-on: [self-hosted, linux, x64]
     environment: azure-lab
     timeout-minutes: 20
     steps:
@@ -39,6 +39,10 @@ jobs:
           : "${TODO_DOMAIN:?Configurar variable AZURE_DOMAIN}"
           export IMAGE_NAMESPACE="ghcr.io/${GITHUB_REPOSITORY,,}"
           export IMAGE_TAG="sha-${GITHUB_SHA}"
+          
+          # Definir las rutas de las imágenes que exige docker-compose
+          export API_IMAGE="${IMAGE_NAMESPACE}/backend:${IMAGE_TAG}"
+          export WEB_IMAGE="${IMAGE_NAMESPACE}/frontend:${IMAGE_TAG}"
 
           DEPLOY_DIR="$HOME/todo-azure"
           mkdir -p "$DEPLOY_DIR/db"
@@ -50,6 +54,8 @@ jobs:
           {
             printf 'IMAGE_NAMESPACE=%s\n' "$IMAGE_NAMESPACE"
             printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG"
+            printf 'API_IMAGE=%s\n' "$API_IMAGE"
+            printf 'WEB_IMAGE=%s\n' "$WEB_IMAGE"
             printf 'TODO_DOMAIN=%s\n' "$TODO_DOMAIN"
             printf 'DB_PASSWORD=%s\n' "$DB_PASSWORD"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
