@@ -42,8 +42,8 @@ jobs:
           export TAG_VALUE="sha-${GITHUB_SHA}"
           
           # Definir las variables exactas que espera el docker-compose y tu .env
-          export API_IMAGE="${IMAGE_NAMESPACE}/back"
-          export WEB_IMAGE="${IMAGE_NAMESPACE}/front"
+          export API_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_backend-api"
+          export WEB_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_frontend-web"
           export BACKEND_TAG="${TAG_VALUE}"
           export WEB_TAG="${TAG_VALUE}"
 
