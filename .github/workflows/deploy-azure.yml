@@ -72,7 +72,7 @@ jobs:
           echo "Verificando HTTPS y estado de la aplicación..."
           ok=0
           for attempt in $(seq 1 36); do
-            if curl --fail --silent --show-error "https://${TODO_DOMAIN}/health" >/dev/null; then
+            if curl -k -L --fail --silent --show-error "https://${TODO_DOMAIN}/health" >/dev/null; then
               ok=1
               break
             fi
