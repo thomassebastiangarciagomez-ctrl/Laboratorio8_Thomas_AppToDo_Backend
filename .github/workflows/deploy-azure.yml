@@ -72,14 +72,16 @@ jobs:
           echo "Verificando HTTPS y estado de la aplicación..."
           ok=0
           for attempt in $(seq 1 36); do
-            if curl --fail --silent --show-error "https://${TODO_DOMAIN}/health" >/dev/null; then
+            # Forzamos la resolución local del dominio falso a 127.0.0.1
+            if curl -k -L --fail --silent --show-error --resolve "${TODO_DOMAIN}:443:127.0.0.1" "https://${TODO_DOMAIN}/health" >/dev/null; then
               ok=1
               break
             fi
             sleep 5
           done
           test "$ok" -eq 1 || { echo 'Error: /health no respondió correctamente'; exit 1; }
-          code=$(curl --silent --output /dev/null --write-out '%{http_code}' "https://${TODO_DOMAIN}/api/v1/tasks")
+          
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' --resolve "${TODO_DOMAIN}:443:127.0.0.1" "https://${TODO_DOMAIN}/api/v1/tasks")
           if [ "$code" != "401" ]; then
             echo "API sin token devolvió HTTP $code (se esperaba 401). Revisar Spring Security."
             exit 1
