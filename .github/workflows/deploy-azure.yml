@@ -39,13 +39,12 @@ jobs:
           : "${TODO_DOMAIN:?Configurar variable AZURE_DOMAIN}"
           
           export IMAGE_NAMESPACE="ghcr.io/${GITHUB_REPOSITORY,,}"
-          export TAG_VALUE="sha-${GITHUB_SHA}"
           
           # Definir las variables exactas que espera el docker-compose y tu .env
           export API_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_backend-api"
           export WEB_IMAGE="ghcr.io/thomassebastiangarciagomez-ctrl/laboratorio8_thomas_apptodo_frontend-web"
-          export BACKEND_TAG="${TAG_VALUE}"
-          export WEB_TAG="${TAG_VALUE}"
+          export BACKEND_TAG="sha-${GITHUB_SHA}"
+          export WEB_TAG="sha-6c1035e59aff39b7edfb5141eeb0f10998f3d625"
 
           DEPLOY_DIR="$HOME/todo-azure"
           mkdir -p "$DEPLOY_DIR/db"
