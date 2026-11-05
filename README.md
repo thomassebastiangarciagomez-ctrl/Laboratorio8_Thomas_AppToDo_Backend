@@ -372,3 +372,8 @@ jobs:
 
 Ahora, al realizar estos cambios e integraciones, se va a mostrar el funcionamiento de la aplicacion en AWS, de tal forma que el despliegue es el esperado.
 
+
+Esta parte es para agregar los links asociados, es importante esta parte ya que se incluye el link al video creado. Toda la documentacion se encuentra en el repositorio de backend, no se realizo documentacion en frontend.
+
+Link al video: 
+
