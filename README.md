@@ -96,3 +96,24 @@ Al crear la nueva rama y subirla a github, cuando realicemos un pull request va 
 
 ## Parte 9 Etapa B1. Definir el stack productivo del laboratorio:
 
+En esta parte, tenemos que configurar la infraestructura necesaria para subir todo a la nube de manera adecuada, para esto, se nos brindan los codigos necesarios, donde se les realizaron algunas modificaciones, debido a que en el laboratorio se concidera que se maneja 1 solo repositorio, pero aqui manejamos 2.
+
+Al realizar estos cambios, tenemos que ejecutar desde powershell los siguientes comandos para realizar las pruebas necesarias y que se configure todo de manera adecuada (es importante previamente haber realizado el Pull Request a main y verificar que los paquetes se hayan creado correctamente).
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml config --quiet
+docker compose --env-file .env -f docker-compose.prod.yml pull
+docker compose --env-file .env -f docker-compose.prod.yml up -d
+docker compose --env-file .env -f docker-compose.prod.yml ps
+```
+
+Al ejecutar estos comandos en nuestra consola y despues de realizar un par de correcciones necesarias, la siguiente imagen es el resultado que debe arrojar los mismos.
+
+![imagenInfra](docs/ci-cd-evidencias/imagenInfra.png)
+
+De igual forma para verificar que todo salio de manera adecuada, podemos ver desde docker que se creo una nueva imagen que esta asociada a nuestro proyecto.
+
+![imagenDocker](docs/ci-cd-evidencias/imagenDocker.png)
+
+## Parte 10 Etapa C1. Preparar Azure for Students:
+
