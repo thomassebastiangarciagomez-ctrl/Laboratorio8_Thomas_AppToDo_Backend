@@ -5,6 +5,16 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 *.env
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules/
+**/target/
+**/dist/
+**/coverage/
 
 ### STS ###
 .apt_generated
