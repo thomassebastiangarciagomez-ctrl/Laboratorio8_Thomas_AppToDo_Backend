@@ -117,3 +117,97 @@ De igual forma para verificar que todo salio de manera adecuada, podemos ver des
 
 ## Parte 10 Etapa C1. Preparar Azure for Students:
 
+Despues de creada la maquina virtual, configurada y con los permisos y los codigos mostrados, dentro de este repositorio vamos a crear el archivo deploy-azure.yml, donde el codigo dado es el siguiente.
+
+```yml
+name: CD - Azure VM
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: deploy-azure-todo
+  cancel-in-progress: false
+
+jobs:
+  quality-gate:
+    name: Revalidar calidad antes del despliegue
+    uses: ./.github/workflows/ci-quality.yml
+
+  deploy-azure:
+    name: Desplegar contenedores en Azure
+    if: github.ref == 'refs/heads/main'
+    needs: quality-gate
+    runs-on: [self-hosted, linux, x64, azure-todo]
+    environment: azure-lab
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar configuración y desplegar
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DB_PASSWORD: ${{ secrets.AZURE_DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.AZURE_JWT_SECRET }}
+          TODO_DOMAIN: ${{ vars.AZURE_DOMAIN }}
+        run: |
+          set -euo pipefail
+          : "${DB_PASSWORD:?Configurar AZURE_DB_PASSWORD}"
+          : "${JWT_SECRET:?Configurar AZURE_JWT_SECRET}"
+          : "${TODO_DOMAIN:?Configurar variable AZURE_DOMAIN}"
+          export IMAGE_NAMESPACE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          export IMAGE_TAG="sha-${GITHUB_SHA}"
+
+          DEPLOY_DIR="$HOME/todo-azure"
+          mkdir -p "$DEPLOY_DIR/db"
+          cp infra/docker-compose.prod.yml "$DEPLOY_DIR/docker-compose.prod.yml"
+          cp infra/Caddyfile "$DEPLOY_DIR/Caddyfile"
+          cp -a infra/db/. "$DEPLOY_DIR/db/"
+
+          umask 077
+          {
+            printf 'IMAGE_NAMESPACE=%s\n' "$IMAGE_NAMESPACE"
+            printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG"
+            printf 'TODO_DOMAIN=%s\n' "$TODO_DOMAIN"
+            printf 'DB_PASSWORD=%s\n' "$DB_PASSWORD"
+            printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
+          } > "$DEPLOY_DIR/.env"
+
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker compose --env-file "$DEPLOY_DIR/.env" -f "$DEPLOY_DIR/docker-compose.prod.yml" config --quiet
+          docker compose --env-file "$DEPLOY_DIR/.env" -f "$DEPLOY_DIR/docker-compose.prod.yml" pull
+          docker compose --env-file "$DEPLOY_DIR/.env" -f "$DEPLOY_DIR/docker-compose.prod.yml" up -d --remove-orphans
+          docker logout ghcr.io
+
+          echo "Verificando HTTPS y estado de la aplicación..."
+          ok=0
+          for attempt in $(seq 1 36); do
+            if curl --fail --silent --show-error "https://${TODO_DOMAIN}/health" >/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ok" -eq 1 || { echo 'Error: /health no respondió correctamente'; exit 1; }
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' "https://${TODO_DOMAIN}/api/v1/tasks")
+          if [ "$code" != "401" ]; then
+            echo "API sin token devolvió HTTP $code (se esperaba 401). Revisar Spring Security."
+            exit 1
+          fi
+          echo "Azure: despliegue, HTTPS y protección básica verificados"
+```
+
+Algo mas a tener en cuenta, es que previamente se tuvieron que configurar las variables secretas correspondientes dentro del repositorio en github, en este caso, el el repositorio de backend.
+
+En la siguiente imagen, se comprueba que la maquina virtual creada, esta configurada de manera adecuada, lo que indica que esta funcionando para realizar de manera adecuada CD.
+
+![Azure1](docs/ci-cd-evidencias/VMAzure1.png)
+
+Como se puede evidenciar en la imagen, se logra ver que la configuracion en docker y que la maquina este corriendo en segundo plano la imagen es la esperada.
+
+## Parte 15 Etapa D1. Preparar el entorno AWS Academy Learner Lab:
+
