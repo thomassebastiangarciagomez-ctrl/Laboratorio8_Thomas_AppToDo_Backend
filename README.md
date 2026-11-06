@@ -375,5 +375,5 @@ Ahora, al realizar estos cambios e integraciones, se va a mostrar el funcionamie
 
 Esta parte es para agregar los links asociados, es importante esta parte ya que se incluye el link al video creado. Toda la documentacion se encuentra en el repositorio de backend, no se realizo documentacion en frontend.
 
-Link al video: 
+Link al video: https://www.youtube.com/watch?v=2LUIH8kN154
 
